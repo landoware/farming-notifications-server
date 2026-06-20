@@ -5,14 +5,18 @@ This server runs the Discord bot for the RuneLite plugin and exposes HTTP endpoi
 ## Discord Commands
 
 - `/initialize`: DMs the user their Discord ID for RuneLite plugin setup.
-- `/<cropGroup> minutes:<n>`: schedules or reschedules that crop group's notification for the DM user.
-- Crop commands are intended to be used in a DM with the bot. Example: `/herb minutes:80`
+- `/<cropGroup> [crop:<name>]`: schedules or reschedules that crop group's notification for the DM user using the crop's fixed OSRS grow time.
+- Crop commands are intended to be used in a DM with the bot. Example: `/allotment crop:watermelon`
+- For groups where every supported crop shares the same grow time, the crop argument is optional. Example: `/herb` and `/herb crop:irit` both schedule an 80-minute notification.
+- Grow times for slash commands are stored server-side from OSRS Wiki patch pages, so users do not type durations manually.
+- If `COMMAND_GUILD_ID` is set, the same commands are also registered in that guild for immediate testing.
 
 ## Environment
 
 - `TOKEN`: Discord bot token
 - `APPLICATION_ID`: Discord application ID used to register `/initialize`
 - `PORT`: HTTP server port, defaults to `8080`
+- `COMMAND_GUILD_ID`: optional guild ID for instant slash-command updates during development
 
 ## API
 

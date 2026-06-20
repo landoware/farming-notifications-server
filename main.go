@@ -29,6 +29,8 @@ func main() {
 		log.Fatal("APPLICATION_ID is required")
 	}
 
+	commandGuildID := os.Getenv("COMMAND_GUILD_ID")
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
@@ -44,10 +46,17 @@ func main() {
 	discord.Identify.Intents = discordgo.IntentsDirectMessages
 	discord.AddHandler(newInteractionHandler(scheduler))
 
-	for _, command := range applicationCommands() {
-		if _, err := discord.ApplicationCommandCreate(applicationID, "", command); err != nil {
-			log.Fatalf("Failed to create %s command: %v", command.Name, err)
+	commands := applicationCommands()
+	if _, err := discord.ApplicationCommandBulkOverwrite(applicationID, "", commands); err != nil {
+		log.Fatalf("Failed to register global commands: %v", err)
+	}
+	log.Printf("Registered %d global commands", len(commands))
+
+	if commandGuildID != "" {
+		if _, err := discord.ApplicationCommandBulkOverwrite(applicationID, commandGuildID, commands); err != nil {
+			log.Fatalf("Failed to register guild commands for %s: %v", commandGuildID, err)
 		}
+		log.Printf("Registered %d guild commands for %s", len(commands), commandGuildID)
 	}
 
 	if err := discord.Open(); err != nil {
@@ -91,17 +100,31 @@ func applicationCommands() []*discordgo.ApplicationCommand {
 	}}
 
 	for _, cropGroup := range sortedCropGroups() {
-		commands = append(commands, &discordgo.ApplicationCommand{
+		command := &discordgo.ApplicationCommand{
 			Name:        string(cropGroup),
 			Description: fmt.Sprintf("Schedule a %s notification.", cropGroup.DisplayName()),
-			Options: []*discordgo.ApplicationCommandOption{{
-				Type:        discordgo.ApplicationCommandOptionInteger,
-				Name:        "minutes",
-				Description: "Minutes from now to send the notification.",
-				Required:    true,
-				MinValue:    ptrFloat(1),
-			}},
-		})
+		}
+
+		crops := cropsForGroup(cropGroup)
+		if len(crops) > 1 {
+			cropChoices := make([]*discordgo.ApplicationCommandOptionChoice, 0, len(crops))
+			for _, crop := range crops {
+				cropChoices = append(cropChoices, &discordgo.ApplicationCommandOptionChoice{
+					Name:  crop.Name,
+					Value: crop.Value,
+				})
+			}
+
+			command.Options = []*discordgo.ApplicationCommandOption{{
+				Type:        discordgo.ApplicationCommandOptionString,
+				Name:        "crop",
+				Description: "Which crop you just planted.",
+				Required:    cropOptionRequired(cropGroup),
+				Choices:     cropChoices,
+			}}
+		}
+
+		commands = append(commands, command)
 	}
 
 	return commands
@@ -162,7 +185,22 @@ func handleCropCommand(s *discordgo.Session, i *discordgo.InteractionCreate, sch
 		return
 	}
 
-	minutes := int(i.ApplicationCommandData().Options[0].IntValue())
+	data := i.ApplicationCommandData()
+	var (
+		crop Crop
+		ok   bool
+	)
+	if len(data.Options) == 0 {
+		crop, ok = defaultCropForGroup(cropGroup)
+	} else {
+		crop, ok = cropForGroup(cropGroup, data.Options[0].StringValue())
+	}
+	if !ok {
+		respondToInteraction(s, i, "That crop is not supported for this patch type.", true)
+		return
+	}
+
+	minutes := int(crop.Duration / time.Minute)
 	response, err := scheduler.Reschedule(NotificationRequest{
 		UserID:          userID,
 		CropGroup:       cropGroup,
@@ -174,7 +212,7 @@ func handleCropCommand(s *discordgo.Session, i *discordgo.InteractionCreate, sch
 		return
 	}
 
-	message := fmt.Sprintf("%s notification %s for <t:%d:F>.", cropGroup.DisplayName(), response.Status, response.ScheduledFor.Unix())
+	message := fmt.Sprintf("%s notification %s for %s at <t:%d:F>.", cropGroup.DisplayName(), response.Status, crop.Name, response.ScheduledFor.Unix())
 	respondToInteraction(s, i, message, false)
 }
 
@@ -201,8 +239,4 @@ func respondToInteraction(s *discordgo.Session, i *discordgo.InteractionCreate, 
 	}); err != nil {
 		log.Printf("error responding to interaction: %v", err)
 	}
-}
-
-func ptrFloat(value float64) *float64 {
-	return &value
 }
