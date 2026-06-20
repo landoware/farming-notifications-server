@@ -25,6 +25,8 @@ const (
 	CropGroupCelastrus  CropGroup = "celastrus"
 	CropGroupRedwood    CropGroup = "redwood"
 	CropGroupSpiritTree CropGroup = "spirit_tree"
+	CropGroupHespori    CropGroup = "hespori"
+	CropGroupBirdhouse  CropGroup = "birdhouse"
 )
 
 var validCropGroups = map[CropGroup]struct{}{
@@ -43,6 +45,8 @@ var validCropGroups = map[CropGroup]struct{}{
 	CropGroupCelastrus:  {},
 	CropGroupRedwood:    {},
 	CropGroupSpiritTree: {},
+	CropGroupHespori:    {},
+	CropGroupBirdhouse:  {},
 }
 
 type NotificationRequest struct {

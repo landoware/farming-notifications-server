@@ -94,10 +94,31 @@ func main() {
 }
 
 func applicationCommands() []*discordgo.ApplicationCommand {
-	commands := []*discordgo.ApplicationCommand{{
-		Name:        "initialize",
-		Description: "Set up notifications for farm runs and setup the RuneLite integration.",
-	}}
+	commands := []*discordgo.ApplicationCommand{
+		{
+			Name:        "initialize",
+			Description: "Set up notifications for farm runs and setup the RuneLite integration.",
+		},
+		{
+			Name:        "testcard",
+			Description: "Preview a harvest notification card.",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "crop_group",
+					Description: "The crop group / patch type.",
+					Required:    true,
+					Choices:     cropGroupChoices(),
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "crop",
+					Description: "Specific crop value (e.g. 'snapdragon'). Omits to use the default.",
+					Required:    false,
+				},
+			},
+		},
+	}
 
 	for _, cropGroup := range sortedCropGroups() {
 		command := &discordgo.ApplicationCommand{
@@ -137,8 +158,12 @@ func newInteractionHandler(scheduler *Scheduler) func(*discordgo.Session, *disco
 		}
 
 		commandName := i.ApplicationCommandData().Name
-		if commandName == "initialize" {
+		switch commandName {
+		case "initialize":
 			handleInitializeCommand(s, i)
+			return
+		case "testcard":
+			handleTestcardCommand(s, i, scheduler)
 			return
 		}
 
@@ -227,6 +252,68 @@ func interactionUserID(i *discordgo.InteractionCreate) (string, error) {
 	}
 
 	return "", fmt.Errorf("interaction user not found")
+}
+
+func handleTestcardCommand(s *discordgo.Session, i *discordgo.InteractionCreate, scheduler *Scheduler) {
+	data := i.ApplicationCommandData()
+
+	var cropGroup CropGroup
+	var cropValue string
+	for _, opt := range data.Options {
+		switch opt.Name {
+		case "crop_group":
+			cropGroup = CropGroup(opt.StringValue())
+		case "crop":
+			cropValue = opt.StringValue()
+		}
+	}
+
+	if err := cropGroup.Validate(); err != nil {
+		respondToInteraction(s, i, "Invalid crop group.", true)
+		return
+	}
+
+	var (
+		crop Crop
+		ok   bool
+	)
+	if cropValue == "" {
+		crop, ok = defaultCropForGroup(cropGroup)
+	} else {
+		crop, ok = cropForGroup(cropGroup, cropValue)
+	}
+	if !ok {
+		respondToInteraction(s, i, "That crop is not supported for this patch type.", true)
+		return
+	}
+
+	notification := &scheduledNotification{
+		cropGroup: cropGroup,
+		cropName:  crop.Name,
+		cropValue: crop.Value,
+	}
+
+	embed := scheduler.buildHarvestEmbed(notification)
+
+	if err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Embeds: []*discordgo.MessageEmbed{embed},
+		},
+	}); err != nil {
+		log.Printf("error responding to testcard interaction: %v", err)
+	}
+}
+
+func cropGroupChoices() []*discordgo.ApplicationCommandOptionChoice {
+	choices := make([]*discordgo.ApplicationCommandOptionChoice, 0, len(validCropGroups))
+	for _, group := range sortedCropGroups() {
+		choices = append(choices, &discordgo.ApplicationCommandOptionChoice{
+			Name:  group.DisplayName(),
+			Value: string(group),
+		})
+	}
+	return choices
 }
 
 func respondToInteraction(s *discordgo.Session, i *discordgo.InteractionCreate, content string, ephemeral bool) {

@@ -141,12 +141,7 @@ func (s *Scheduler) fire(key string, userID string, cropGroup CropGroup, notifyA
 	}
 }
 
-func (s *Scheduler) sendHarvestReadyDM(notification *scheduledNotification) error {
-	channel, err := s.discord.UserChannelCreate(notification.userID)
-	if err != nil {
-		return fmt.Errorf("create DM channel: %w", err)
-	}
-
+func (s *Scheduler) buildHarvestEmbed(notification *scheduledNotification) *discordgo.MessageEmbed {
 	embed := &discordgo.MessageEmbed{
 		Title:       "Harvest Ready",
 		Description: fmt.Sprintf("Your %s is ready to harvest", notification.displayCropName()),
@@ -162,7 +157,16 @@ func (s *Scheduler) sendHarvestReadyDM(notification *scheduledNotification) erro
 		}
 	}
 
-	if _, err := s.discord.ChannelMessageSendEmbed(channel.ID, embed); err != nil {
+	return embed
+}
+
+func (s *Scheduler) sendHarvestReadyDM(notification *scheduledNotification) error {
+	channel, err := s.discord.UserChannelCreate(notification.userID)
+	if err != nil {
+		return fmt.Errorf("create DM channel: %w", err)
+	}
+
+	if _, err := s.discord.ChannelMessageSendEmbed(channel.ID, s.buildHarvestEmbed(notification)); err != nil {
 		return fmt.Errorf("send embed DM: %w", err)
 	}
 

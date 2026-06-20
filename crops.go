@@ -108,6 +108,19 @@ var cropsByGroup = map[CropGroup][]Crop{
 	CropGroupSpiritTree: {
 		{Name: "Spirit Tree", Value: "spirit_tree", Duration: 3840 * time.Minute, WikiTitle: "Spirit Tree (Farming)"},
 	},
+	CropGroupHespori: {
+		{Name: "Hespori", Value: "hespori", Duration: 1920 * time.Minute, WikiTitle: "Hespori"},
+	},
+	CropGroupBirdhouse: {
+		{Name: "Bird House", Value: "bird_house", Duration: 50 * time.Minute, WikiTitle: "Bird house"},
+		{Name: "Oak Bird House", Value: "oak_bird_house", Duration: 50 * time.Minute, WikiTitle: "Oak bird house"},
+		{Name: "Willow Bird House", Value: "willow_bird_house", Duration: 50 * time.Minute, WikiTitle: "Willow bird house"},
+		{Name: "Teak Bird House", Value: "teak_bird_house", Duration: 50 * time.Minute, WikiTitle: "Teak bird house"},
+		{Name: "Maple Bird House", Value: "maple_bird_house", Duration: 50 * time.Minute, WikiTitle: "Maple bird house"},
+		{Name: "Mahogany Bird House", Value: "mahogany_bird_house", Duration: 50 * time.Minute, WikiTitle: "Mahogany bird house"},
+		{Name: "Magic Bird House", Value: "magic_bird_house", Duration: 50 * time.Minute, WikiTitle: "Magic bird house"},
+		{Name: "Redwood Bird House", Value: "redwood_bird_house", Duration: 50 * time.Minute, WikiTitle: "Redwood bird house"},
+	},
 }
 
 func cropsForGroup(group CropGroup) []Crop {
