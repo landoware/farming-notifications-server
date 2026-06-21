@@ -121,6 +121,29 @@ var cropsByGroup = map[CropGroup][]Crop{
 		{Name: "Magic Bird House", Value: "magic_bird_house", Duration: 50 * time.Minute, WikiTitle: "Magic bird house"},
 		{Name: "Redwood Bird House", Value: "redwood_bird_house", Duration: 50 * time.Minute, WikiTitle: "Redwood bird house"},
 	},
+	CropGroupGrape: {
+		{Name: "Grapes", Value: "grapes", Duration: 35 * time.Minute, WikiTitle: "Grapes"},
+	},
+	CropGroupAnima: {
+		{Name: "Kronos", Value: "kronos", Duration: 5120 * time.Minute, WikiTitle: "Kronos plant"},
+		{Name: "Iasor", Value: "iasor", Duration: 5120 * time.Minute, WikiTitle: "Iasor plant"},
+		{Name: "Attas", Value: "attas", Duration: 5120 * time.Minute, WikiTitle: "Attas plant"},
+	},
+	CropGroupHardwood: {
+		{Name: "Teak tree", Value: "teak", Duration: 4480 * time.Minute, WikiTitle: "Teak tree"},
+		{Name: "Mahogany tree", Value: "mahogany", Duration: 5120 * time.Minute, WikiTitle: "Mahogany tree (Farming)"},
+		{Name: "Camphor tree", Value: "camphor", Duration: 5120 * time.Minute, WikiTitle: "Camphor tree"},
+		{Name: "Ironwood tree", Value: "ironwood", Duration: 5120 * time.Minute, WikiTitle: "Ironwood tree"},
+		{Name: "Rosewood tree", Value: "rosewood", Duration: 6400 * time.Minute, WikiTitle: "Rosewood tree"},
+	},
+	CropGroupCrystal: {
+		{Name: "Crystal Tree", Value: "crystal", Duration: 480 * time.Minute, WikiTitle: "Crystal tree"},
+	},
+	CropGroupCoral: {
+		{Name: "Elkhorn", Value: "elkhorn", Duration: 160 * time.Minute, WikiTitle: "Elkhorn coral"},
+		{Name: "Pillar", Value: "pillar", Duration: 160 * time.Minute, WikiTitle: "Pillar coral"},
+		{Name: "Umbral", Value: "umbral", Duration: 160 * time.Minute, WikiTitle: "Umbral coral"},
+	},
 }
 
 func cropsForGroup(group CropGroup) []Crop {

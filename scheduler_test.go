@@ -250,8 +250,8 @@ func TestSchedulerReschedule_EmptyCropValueFillsDefault(t *testing.T) {
 	if n.cropValue != "oak" {
 		t.Errorf("cropValue = %q, want %q", n.cropValue, "oak")
 	}
-	if n.cropName != "Oak" {
-		t.Errorf("cropName = %q, want %q", n.cropName, "Oak")
+	if n.cropName != "Oak Tree" {
+		t.Errorf("cropName = %q, want %q", n.cropName, "Oak Tree")
 	}
 }
 

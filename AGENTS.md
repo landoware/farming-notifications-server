@@ -2,46 +2,48 @@
 
 ## Scope
 
-- This repo is a single Go `main` package. There are no subpackages, task runners, CI workflows, or alternate entrypoints.
+- Single Go `main` package (no subpackages, no task runners, no CI).
 
 ## Runtime shape
 
-- `main.go` starts both the Discord bot session and the HTTP API in one process.
-- Startup requires `TOKEN` and `APPLICATION_ID`. `PORT` is optional and defaults to `8080`.
-- `COMMAND_GUILD_ID` is an optional Discord development env var.
-- `.env` is loaded via `godotenv`, but missing `.env` is not fatal; missing required env vars is.
+- `main.go` starts the Discord bot session and HTTP API in one process.
+- Requires `TOKEN` and `APPLICATION_ID` env vars; `PORT` defaults to `8080`.
+- `COMMAND_GUILD_ID`: optional Discord dev guild for instant command registration.
+- `.env` is loaded via `godotenv`; missing `.env` is not fatal, missing required vars is.
 
 ## Important files
 
-- `main.go`: process startup, Discord command registration, graceful shutdown.
-- `main.go`: also registers one slash command per crop group; groups with mixed grow times require a `crop` choice option, while uniform-duration groups allow it to be omitted.
-- `api.go`: all HTTP routing and request validation.
-- `crops.go`: crop names and grow durations used by Discord slash commands.
-- `crops.go`: crop names, grow durations, and OSRS Wiki titles used by Discord slash commands and notification cards.
+- `main.go`: process startup, graceful shutdown, slash-command registration, button-click handler.
+- `api.go`: HTTP routing (`net/http` ServeMux) and request validation.
+- `crops.go`: crop names, OSRS Wiki titles, and grow durations.
 - `scheduler.go`: in-memory timers keyed by `userId:cropGroup`; notifications are lost on restart.
-- `wiki.go`: OSRS Wiki thumbnail lookup and in-memory caching for Discord embeds.
-- `types.go`: crop-group enum, patch-location enum (`PatchLocation` with constants and per-group helper `ValidPatchLocationsForGroup`), and API request/response types.
+- `wiki.go`: OSRS Wiki thumbnail lookup with in-memory caching.
+- `types.go`: crop-group enum (23 groups), patch-location enum, API request/response types.
 
-## Verified commands
+## Commands
 
-- Dev server with hot reload: `air`
-- Format: `gofmt -w "main.go" "api.go" "scheduler.go" "types.go" "crops.go"`
-- Build: `go build ./...`
-- Focused build without polluting repo root: `go build -o "/tmp/opencode/osrs-notifier-server" ./...`
-- Tests: there are currently no `_test.go` files.
+| what | command |
+|------|---------|
+| dev with hot reload | `air` |
+| build | `go build ./...` |
+| build (no repo litter) | `go build -o "/tmp/opencode/osrs-notifier-server" ./...` |
+| test all | `go test ./...` |
+| test single function | `go test -v -run 'TestSchedule' ./...` |
+| format | `gofmt -w .` |
+
+Pre-existing test failure (not caused by stale codegen or fixtures):
+`TestSchedulerReschedule_EmptyCropValueFillsDefault` — expects `cropName == "Oak"` but `crops.go` stores `"Oak Tree"` for the tree default. A fix should change the test expectation or the crop name.
 
 ## Behavior that is easy to guess wrong
 
-- `POST /api/v1/notifications` is create-only and returns `409` if `(userId, cropGroup)` already exists.
-- `PUT /api/v1/notifications/{cropGroup}` is an upsert: it reschedules if present, otherwise creates and returns `status: "scheduled"`.
-- Discord crop slash commands also upsert by calling `Scheduler.Reschedule`, and they only allow scheduling from a DM channel.
-- Slash-command grow times are hardcoded from OSRS Wiki data in `crops.go`; update those mappings when crop support changes.
-- Error responses intentionally include `allowedCropGroups` from `types.go`; keep that contract in sync if crop groups change.
-- The Discord ready DM is generated in `scheduler.go` as an embed at send time and includes a "Queue Another" button whose `custom_id` is `reschedule:<cropGroup>:<cropValue>`.
-- Button clicks are handled in `main.go:handleMessageComponent`, which parses the custom ID and calls `Scheduler.Reschedule` before replying ephemerally.
-- `POST /api/v1/notifications` and `PUT /api/v1/notifications/{cropGroup}` accept an optional `patches` array with `{crop, location}` objects. Location values are validated against the `PatchLocation` enum in `types.go`.
-- When `patches` are present, `buildHarvestEmbed` renders a multi-line list (e.g., "Your herbs are ready:\\n- Ranarr at Farming Guild\\n- Irit at Falador") instead of the single-crop message.
-
-## Workflow notes
-
-- If you run `go build` without `-o`, Go will drop a binary in the repo root named `osrs-notifier-server`; remove it before finishing if you only needed a verification build.
+- `POST /api/v1/notifications` is create-only → returns `409` if `(userId, cropGroup)` exists.
+- `PUT /api/v1/notifications/{cropGroup}` is an upsert (reschedules if present, creates otherwise).
+- `POST`/`PUT` both accept an optional `patches` array `[{crop, location}]`; locations validated against `PatchLocation` in `types.go`.
+- When `patches` are present, `buildHarvestEmbed` renders a multi-line list instead of the single-crop message.
+- Discord crop slash commands also upsert via `Scheduler.Reschedule`, and only work in DMs.
+- Slash-command grow times are hardcoded in `crops.go` from OSRS Wiki data; update mappings when crop support changes.
+- `testcard` slash command previews the harvest notification embed; it requires a `crop_group` arg, optional `crop`.
+- Button "I replanted" (`custom_id: reschedule:<cropGroup>:<cropValue>`) is handled in `main.go:handleMessageComponent`.
+- Error responses include `allowedCropGroups`; keep that contract in sync when adding crop groups.
+- Crop choice `required` flag depends on group: required only if group has >1 crop with differing durations (`cropOptionRequired` in `crops.go:172`).
+- `go build` without `-o` drops `osrs-notifier-server` binary in the repo root; clean it up after verification builds.

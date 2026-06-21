@@ -23,6 +23,7 @@ const (
 	PatchLocationAuburnvale       PatchLocation = "Auburnvale"
 	PatchLocationBrimhaven        PatchLocation = "Brimhaven"
 	PatchLocationCanifis          PatchLocation = "Canifis"
+	PatchLocationCoralNursery     PatchLocation = "Coral Nurseries"
 	PatchLocationCatherby         PatchLocation = "Catherby"
 	PatchLocationCatherbyEast     PatchLocation = "Catherby (East)"
 	PatchLocationChampionsGuild   PatchLocation = "Champions' Guild"
@@ -73,6 +74,7 @@ var validPatchLocations = map[PatchLocation]struct{}{
 	PatchLocationCanifis:          {},
 	PatchLocationCatherby:         {},
 	PatchLocationCatherbyEast:     {},
+	PatchLocationCoralNursery:     {},
 	PatchLocationChampionsGuild:   {},
 	PatchLocationDraynorManor:     {},
 	PatchLocationEntrana:          {},
@@ -225,6 +227,28 @@ func ValidPatchLocationsForGroup(group CropGroup) []PatchLocation {
 		return []PatchLocation{
 			PatchLocationFarmingGuild,
 		}
+	case CropGroupGrape:
+		return []PatchLocation{
+			PatchLocationHosidius,
+		}
+	case CropGroupAnima:
+		return []PatchLocation{
+			PatchLocationFarmingGuild,
+		}
+	case CropGroupHardwood:
+		return []PatchLocation{
+			PatchLocationAnglersRetreat,
+			PatchLocationFossilIsland,
+			PatchLocationLocusOasis,
+		}
+	case CropGroupCrystal:
+		return []PatchLocation{
+			PatchLocationPrifddinas,
+		}
+	case CropGroupCoral:
+		return []PatchLocation{
+			PatchLocationCoralNursery,
+		}
 	default:
 		return nil
 	}
@@ -250,6 +274,11 @@ const (
 	CropGroupSpiritTree CropGroup = "spirit_tree"
 	CropGroupHespori    CropGroup = "hespori"
 	CropGroupBirdhouse  CropGroup = "birdhouse"
+	CropGroupGrape      CropGroup = "grape"
+	CropGroupAnima      CropGroup = "anima"
+	CropGroupHardwood   CropGroup = "hardwood"
+	CropGroupCrystal    CropGroup = "crystal"
+	CropGroupCoral      CropGroup = "coral"
 )
 
 var validCropGroups = map[CropGroup]struct{}{
@@ -270,6 +299,11 @@ var validCropGroups = map[CropGroup]struct{}{
 	CropGroupSpiritTree: {},
 	CropGroupHespori:    {},
 	CropGroupBirdhouse:  {},
+	CropGroupGrape:      {},
+	CropGroupAnima:      {},
+	CropGroupHardwood:   {},
+	CropGroupCrystal:    {},
+	CropGroupCoral:      {},
 }
 
 type NotificationRequest struct {

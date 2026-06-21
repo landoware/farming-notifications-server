@@ -28,6 +28,11 @@ func TestCropGroupValidate(t *testing.T) {
 		{"valid spirit tree", CropGroupSpiritTree, false},
 		{"valid hespori", CropGroupHespori, false},
 		{"valid birdhouse", CropGroupBirdhouse, false},
+		{"valid grape", CropGroupGrape, false},
+		{"valid anima", CropGroupAnima, false},
+		{"valid hardwood", CropGroupHardwood, false},
+		{"valid crystal", CropGroupCrystal, false},
+		{"valid coral", CropGroupCoral, false},
 		{"invalid empty", CropGroup(""), true},
 		{"invalid gibberish", CropGroup("not_a_crop"), true},
 	}
@@ -64,6 +69,11 @@ func TestCropGroupDisplayNamePlural(t *testing.T) {
 		{CropGroupSpiritTree, "spirit trees"},
 		{CropGroupHespori, "hesporis"},
 		{CropGroupBirdhouse, "birdhouses"},
+		{CropGroupGrape, "grapes"},
+		{CropGroupAnima, "animas"},
+		{CropGroupHardwood, "hardwoods"},
+		{CropGroupCrystal, "crystals"},
+		{CropGroupCoral, "corals"},
 	}
 
 	for _, tt := range tests {

@@ -108,6 +108,11 @@ func TestCropOptionRequired(t *testing.T) {
 		{"bush (mixed durations)", CropGroupBush, true},
 		{"cactus (mixed durations)", CropGroupCactus, true},
 		{"birdhouse (uniform duration)", CropGroupBirdhouse, false},
+		{"grape (single crop)", CropGroupGrape, false},
+		{"anima (uniform duration)", CropGroupAnima, false},
+		{"hardwood (mixed durations)", CropGroupHardwood, true},
+		{"crystal (single crop)", CropGroupCrystal, false},
+		{"coral (uniform duration)", CropGroupCoral, false},
 	}
 
 	for _, tt := range tests {
